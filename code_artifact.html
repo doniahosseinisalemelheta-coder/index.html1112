@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي خريطة أبطال الخطة 🌍🏆</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brandGreen: '#10B981',
+                        brandDarkGreen: '#047857',
+                        brandLightGreen: '#ECFDF5',
+                        brandYellow: '#F59E0B',
+                        brandLightYellow: '#FEF3C7',
+                        brandDarkYellow: '#D97706'
+                    },
+                    fontFamily: {
+                        cairo: ['Cairo', 'sans-serif'],
+                        tajawal: ['Tajawal', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts: Cairo & Tajawal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Canvas Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- html2pdf Library for generating PDF certificate in Arabic -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Cairo', 'Tajawal', sans-serif;
+            background-color: #f8fafc;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* Animated Stars and Sparkles Background */
+        .stars-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .star {
+            position: absolute;
+            background: #F59E0B;
+            border-radius: 50%;
+            animation: twinkle var(--duration) infinite ease-in-out alternate;
+            opacity: 0.6;
+        }
+        @keyframes twinkle {
+            0% { transform: scale(0.6); opacity: 0.2; }
+            100% { transform: scale(1.4); opacity: 0.9; }
+        }
+
+        /* Bouncing Welcome Header Animation */
+        @keyframes headerBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-header {
+            animation: headerBounce 3s ease-in-out infinite;
+        }
+
+        /* SVG Map Container Styling */
+        .map-container {
+            overflow: hidden;
+            position: relative;
+            background: #e0f2fe;
+            border: 4px solid #10B981;
+            border-radius: 1.5rem;
+            cursor: grab;
+        }
+        .map-container:active {
+            cursor: grabbing;
+        }
+
+        /* Interactive Pins / Arrows on SVG Map */
+        .map-arrow-marker {
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.3));
+        }
+        .map-arrow-marker:hover {
+            transform: scale(1.3) translateY(-5px);
+            filter: drop-shadow(0px 6px 12px rgba(245, 158, 11, 0.8));
+        }
+        .arrow-pulse {
+            animation: pulseGlow 1.8s infinite;
+        }
+        @keyframes pulseGlow {
+            0% { filter: drop-shadow(0 0 2px #F59E0B); }
+            50% { filter: drop-shadow(0 0 10px #F59E0B); }
+            100% { filter: drop-shadow(0 0 2px #F59E0B); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10B981;
+            border-radius: 4px;
+        }
+
+        /* Balloon Animation */
+        .balloon {
+            position: fixed;
+            bottom: -100px;
+            opacity: 0.9;
+            z-index: 100;
+            animation: floatUp 5s ease-in forwards;
+            pointer-events: none;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-110vh) rotate(20deg); opacity: 0; }
+        }
+
+        /* Certificate Modal Background */
+        .certificate-paper {
+            background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+            border: 12px solid #10B981;
+            box-shadow: inset 0 0 0 4px #F59E0B, 0 20px 40px rgba(0,0,0,0.25);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col relative pb-12">
+
+    <!-- Background Stars Effect -->
+    <div class="stars-container" id="starsBg"></div>
+
+    <!-- Top Header & Banner -->
+    <header class="relative z-10 pt-6 px-4 max-w-5xl mx-auto w-full text-center">
+        <div class="bg-white/90 backdrop-blur-md rounded-2xl p-6 shadow-xl border-2 border-brandGreen relative overflow-hidden">
+            <!-- Decorative corner elements -->
+            <div class="absolute -top-6 -right-6 w-16 h-16 bg-brandYellow rounded-full opacity-30"></div>
+            <div class="absolute -bottom-6 -left-6 w-16 h-16 bg-brandGreen rounded-full opacity-30"></div>
+
+            <div class="inline-block bg-brandLightYellow text-brandDarkYellow px-4 py-1.5 rounded-full text-sm font-bold mb-3 shadow-sm border border-brandYellow">
+                🏆 الصف الثالث الإعدادي - مادة الدراسات الاجتماعية
+            </div>
+
+            <!-- Mandatory Literal Welcome Text -->
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-extrabold text-brandDarkGreen leading-relaxed md:leading-loose animate-header tracking-wide">
+                أهلًا يا أبطال الخطة 💚💛<br>
+                مس جايّة تلعب معاكم لعبة صغيرة! 🗺️✨<br>
+                <span class="text-brandDarkYellow text-xl sm:text-2xl md:text-3xl font-black">
+                    واللي هيجاوب صح ليه مكافأة على الموقع… كمّل علشان تعرف! 👀🏆
+                </span>
+            </h1>
+
+            <!-- Progress Bar Bar Header -->
+            <div class="mt-6 max-w-xl mx-auto bg-slate-100 rounded-full h-6 p-1 border border-slate-200 shadow-inner flex items-center relative">
+                <div id="progressBar" class="bg-gradient-to-r from-brandGreen to-brandYellow h-full rounded-full transition-all duration-500 w-0"></div>
+                <span id="progressText" class="absolute inset-0 flex items-center justify-center text-xs sm:text-sm font-extrabold text-slate-700">
+                    أكملت 0 من 10 أسئلة (0%)
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Interactive Map & Questions Area -->
+    <main class="relative z-10 max-w-7xl mx-auto w-full px-4 mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Interactive World Map (8 Cols) -->
+        <section class="lg:col-span-7 flex flex-col items-center">
+            <div class="bg-white rounded-2xl p-4 shadow-lg border-2 border-slate-200 w-full">
+                <!-- Map Toolbar Controls -->
+                <div class="flex items-center justify-between mb-3 px-2">
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <span class="text-xs sm:text-sm font-bold text-slate-600 bg-brandLightGreen px-3 py-1 rounded-lg border border-brandGreen">
+                            <i class="fa-solid fa-hand-pointer text-brandGreen ml-1"></i> انقر على الأسهم للتلميح
+                        </span>
+                    </div>
+                    <div class="flex items-center space-x-2 space-x-reverse">
+                        <button id="zoomInBtn" title="تكبير الخريطة" class="bg-brandGreen hover:bg-brandDarkGreen text-white p-2.5 rounded-xl shadow-md transition transform active:scale-95">
+                            <i class="fa-solid fa-magnifying-glass-plus text-base"></i>
+                        </button>
+                        <button id="zoomOutBtn" title="تصغير الخريطة" class="bg-brandGreen hover:bg-brandDarkGreen text-white p-2.5 rounded-xl shadow-md transition transform active:scale-95">
+                            <i class="fa-solid fa-magnifying-glass-minus text-base"></i>
+                        </button>
+                        <button id="zoomResetBtn" title="إعادة الضبط" class="bg-brandYellow hover:bg-brandDarkYellow text-white px-3 py-2 rounded-xl shadow-md text-xs font-bold transition transform active:scale-95">
+                            إعادة ضبط 🔄
+                        </button>
+                    </div>
+                </div>
+
+                <!-- SVG Map Viewport Wrapper -->
+                <div id="mapViewport" class="map-container h-[420px] sm:h-[500px] md:h-[550px] w-full flex items-center justify-center relative shadow-inner">
+                    <svg id="worldMapSvg" viewBox="0 0 1000 500" class="w-full h-full transition-transform duration-200 ease-out">
+                        <defs>
+                            <!-- Arrow Marker Style Definitions -->
+                            <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feDropShadow dx="1" dy="3" stdDeviation="2" flood-color="#000" flood-opacity="0.4"/>
+                            </filter>
+                        </defs>
+
+                        <!-- Ocean Background -->
+                        <rect x="0" y="0" width="1000" height="500" fill="#bae6fd" />
+
+                        <!-- Simplified Detailed SVG World Map Paths (Continents & Major Islands) -->
+                        <g id="landmasses" fill="#86efac" stroke="#15803d" stroke-width="0.8">
+                            <!-- North America -->
+                            <path d="M 50 40 L 120 30 L 180 25 L 260 20 L 290 40 L 250 60 L 280 90 L 230 110 L 250 140 L 210 170 L 190 200 L 160 180 L 140 220 L 110 210 L 120 170 L 90 140 L 60 150 L 40 120 L 70 90 L 30 70 Z" />
+                            <!-- Greenland -->
+                            <path d="M 320 20 L 390 15 L 410 40 L 360 60 L 330 50 Z" />
+                            <!-- Central America -->
+                            <path d="M 190 200 L 220 220 L 240 250 L 220 260 L 190 220 Z" />
+                            <!-- South America -->
+                            <path d="M 230 260 L 290 260 L 340 300 L 350 350 L 320 400 L 290 460 L 260 470 L 250 420 L 260 360 L 220 300 Z" />
+                            <!-- Europe -->
+                            <path d="M 460 70 L 520 60 L 580 70 L 600 100 L 570 140 L 520 150 L 480 160 L 450 130 L 470 100 Z" />
+                            <!-- Iberian Peninsula (Spain & Portugal boundary region) -->
+                            <path d="M 440 130 L 480 130 L 480 160 L 440 160 Z" fill="#4ade80" />
+                            <!-- Africa -->
+                            <path d="M 450 170 L 540 170 L 600 220 L 590 280 L 550 350 L 500 370 L 470 320 L 430 240 L 440 200 Z" />
+                            <!-- Asia -->
+                            <path d="M 580 70 L 750 40 L 900 50 L 960 90 L 920 160 L 850 180 L 800 240 L 740 250 L 710 200 L 650 180 L 600 130 Z" />
+                            <!-- Australia & Oceania -->
+                            <path d="M 780 320 L 880 310 L 920 360 L 890 420 L 820 420 L 770 370 Z" />
+                            <!-- Antarctica -->
+                            <path d="M 100 490 L 900 490 L 900 500 L 100 500 Z" fill="#e2e8f0" />
+                        </g>
+
+                        <!-- Geographic Grids (Latitude/Longitude Lines for Real Map Look) -->
+                        <g stroke="#ffffff" stroke-width="0.5" opacity="0.4" stroke-dasharray="4,4">
+                            <line x1="0" y1="250" x2="1000" y2="250" /> <!-- Equator -->
+                            <line x1="0" y1="125" x2="1000" y2="125" />
+                            <line x1="0" y1="375" x2="1000" y2="375" />
+                            <line x1="500" y1="0" x2="500" y2="500" />
+                        </g>
+
+                        <!-- 10 INTERACTIVE ARROWS / MARKERS (Strictly positioned on target geographic locations) -->
+                        <g id="mapMarkers">
+                            <!-- Arrow 1: Spain (Europe - Iberian Peninsula Right) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(1)" transform="translate(465, 140)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">1</text>
+                            </g>
+
+                            <!-- Arrow 2: Portugal (Europe - Iberian Peninsula Left Coast) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(2)" transform="translate(445, 145)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">2</text>
+                            </g>
+
+                            <!-- Arrow 3: North America Continent (Center of N. America) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(3)" transform="translate(180, 100)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#3B82F6" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">3</text>
+                            </g>
+
+                            <!-- Arrow 4: South America Continent (Center of S. America) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(4)" transform="translate(270, 360)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#3B82F6" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">4</text>
+                            </g>
+
+                            <!-- Arrow 5: Brazil (East S. America) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(5)" transform="translate(310, 330)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">5</text>
+                            </g>
+
+                            <!-- Arrow 6: Argentina (South S. America) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(6)" transform="translate(280, 420)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">6</text>
+                            </g>
+
+                            <!-- Arrow 7: Colombia (North-West S. America) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(7)" transform="translate(245, 275)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">7</text>
+                            </g>
+
+                            <!-- Arrow 8: Paraguay (Landlocked S. America Center) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(8)" transform="translate(290, 385)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">8</text>
+                            </g>
+
+                            <!-- Arrow 9: Chile (Thin Western Strip S. America) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(9)" transform="translate(255, 410)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">9</text>
+                            </g>
+
+                            <!-- Arrow 10: Canada (North N. America) -->
+                            <g class="map-arrow-marker arrow-pulse" onclick="openHintModal(10)" transform="translate(160, 60)">
+                                <path d="M 0 0 L -12 -24 L -4 -24 L -4 -40 L 4 -40 L 4 -24 L 12 -24 Z" fill="#EF4444" stroke="#FFFFFF" stroke-width="2" filter="url(#shadow)"/>
+                                <circle cx="0" cy="-32" r="11" fill="#F59E0B" />
+                                <text x="0" y="-27" text-anchor="middle" fill="#FFFFFF" font-weight="900" font-size="13">10</text>
+                            </g>
+                        </g>
+                    </svg>
+                </div>
+                <div class="mt-2 text-center text-xs text-slate-500 font-semibold">
+                    💡 تلميح: يمكنك سحب الخريطة للتحريك وتكبيرها/تصغيرها برول الماوس أو الأزرار أعلى الخريطة.
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Column: Interactive Questions List (5 Cols) -->
+        <section class="lg:col-span-5 flex flex-col space-y-4">
+            <div class="bg-white rounded-2xl p-5 shadow-lg border-2 border-brandGreen">
+                <div class="flex items-center justify-between border-b pb-3 mb-4">
+                    <h2 class="text-xl font-bold text-brandDarkGreen flex items-center">
+                        <i class="fa-solid fa-clipboard-question text-brandYellow ml-2 text-2xl"></i> أسئلة الخريطة
+                    </h2>
+                    <span class="text-xs bg-brandLightYellow text-brandDarkYellow font-bold px-3 py-1 rounded-full">
+                        10 أسئلة متتالية
+                    </span>
+                </div>
+
+                <!-- Scrollable Container for Questions -->
+                <div id="questionsList" class="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                    <!-- Questions will be dynamically rendered here via JavaScript -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Hint Modal Window (Appears when clicking any arrow on the map) -->
+    <div id="hintModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-300">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border-4 border-brandYellow relative transform transition-transform scale-95">
+            <button onclick="closeHintModal()" class="absolute top-4 left-4 text-slate-400 hover:text-slate-700 text-xl w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="text-center">
+                <div class="w-16 h-16 bg-brandLightYellow rounded-full flex items-center justify-center mx-auto mb-3 text-brandYellow text-3xl shadow-inner border border-brandYellow">
+                    <i class="fa-solid fa-lightbulb"></i>
+                </div>
+                <h3 id="hintModalTitle" class="text-xl font-black text-brandDarkGreen mb-2">تلميح السهم رقم 1</h3>
+                <p id="hintModalText" class="text-slate-600 text-base leading-relaxed mb-6 font-semibold bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                    جاري تحميل التلميح...
+                </p>
+                <button onclick="closeHintModal()" class="w-full bg-brandGreen hover:bg-brandDarkGreen text-white font-extrabold py-3 rounded-2xl shadow-lg transition active:scale-95">
+                    فهمت! سأجيب الآن 🚀
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completion & Certificate Generator Modal -->
+    <div id="certificateModal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl border-4 border-brandGreen relative max-h-[90vh] overflow-y-auto">
+            
+            <div class="text-center mb-6">
+                <div class="inline-block p-3 bg-brandLightYellow rounded-full text-brandYellow text-4xl mb-2 animate-bounce">
+                    🏆
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-black text-brandDarkGreen">ألف مبروك يا بطل الخطة! 🎉</h2>
+                <p class="text-slate-600 text-sm sm:text-base font-bold mt-1">
+                    أكملت جميع أسئلة خريطة العالم بنجاح 100%! أدخل اسمك لاستخراج شهادة التقدير الرسمية.
+                </p>
+            </div>
+
+            <!-- Name Input Field -->
+            <div class="mb-6">
+                <label class="block text-right font-bold text-slate-700 mb-2">اسم الطالب الثلاثي أو الرباعي:</label>
+                <input type="text" id="studentNameInput" placeholder="أدخل اسمك هنا مثل: أحمد محمد علي" class="w-full px-4 py-3 rounded-xl border-2 border-brandGreen focus:outline-none focus:ring-2 focus:ring-brandYellow text-lg font-bold text-center">
+                <p id="nameError" class="text-red-500 text-xs mt-1 font-bold hidden">يرجى كتابة الاسم للتمكن من إنتاج الشهادة.</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                <button onclick="previewCertificate()" class="flex-1 bg-brandYellow hover:bg-brandDarkYellow text-white font-black py-3 rounded-xl shadow-md transition">
+                    <i class="fa-solid fa-eye ml-2"></i> معاينة الشهادة
+                </button>
+                <button onclick="downloadPDFCertificate()" class="flex-1 bg-brandGreen hover:bg-brandDarkGreen text-white font-black py-3 rounded-xl shadow-md transition">
+                    <i class="fa-solid fa-file-pdf ml-2"></i> تحميل الشهادة (PDF)
+                </button>
+            </div>
+
+            <!-- Hidden Certificate Canvas/Paper Container for Export -->
+            <div id="certificateWrapper" class="hidden my-4 overflow-x-auto">
+                <div id="certificatePaper" class="certificate-paper p-8 text-center relative max-w-xl mx-auto rounded-2xl">
+                    <!-- Corner Ornaments -->
+                    <div class="absolute top-3 right-3 text-brandYellow text-xl">✨</div>
+                    <div class="absolute top-3 left-3 text-brandYellow text-xl">✨</div>
+                    <div class="absolute bottom-3 right-3 text-brandYellow text-xl">✨</div>
+                    <div class="absolute bottom-3 left-3 text-brandYellow text-xl">✨</div>
+
+                    <!-- Header logo title -->
+                    <div class="text-brandDarkGreen font-black text-xs uppercase tracking-widest mb-1">الخطة التعليمية</div>
+                    <h3 class="text-3xl font-black text-brandDarkGreen mb-1">شهادة تقدير</h3>
+                    <p class="text-brandDarkYellow font-extrabold text-sm mb-4">تحدي خريطة أبطال الخطة 🌍</p>
+
+                    <div class="my-4 border-y-2 border-brandGreen/30 py-4">
+                        <p class="text-slate-600 font-bold text-sm mb-2">تُمنح هذه الشهادة إلى الطالب البطل:</p>
+                        <h4 id="certStudentName" class="text-2xl font-black text-brandDarkGreen bg-brandLightYellow py-2 px-4 rounded-xl border border-brandYellow inline-block my-1">
+                            [اسم الطالب]
+                        </h4>
+                    </div>
+
+                    <p class="text-slate-700 text-xs sm:text-sm font-semibold leading-relaxed px-4 mb-4">
+                        تُمنح هذه الشهادة كدليل على الاعتراف بالقدرات والكفاءات التي أظهرها المعني وفقًا للمعايير المحددة في النشاط الذي شارك فيه.
+                    </p>
+
+                    <div class="bg-brandLightGreen text-brandDarkGreen py-2 px-4 rounded-xl text-xs sm:text-sm font-extrabold mb-4">
+                        أحسنت يا بطل! استمر في التميز والإنجاز 🌟🏆
+                    </div>
+
+                    <!-- Signature & Seal -->
+                    <div class="flex justify-between items-center px-6 pt-2 text-xs font-bold text-slate-500">
+                        <div>
+                            <span>إدارة الخطة التعليمية</span><br>
+                            <span class="text-brandYellow">★★★★★</span>
+                        </div>
+                        <div class="text-3xl text-brandYellow">
+                            🏅
+                        </div>
+                        <div>
+                            <span>التاريخ:</span><br>
+                            <span id="certDate">2026/10/13</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center pt-2">
+                <button onclick="closeCertModal()" class="text-slate-400 hover:text-slate-600 font-bold text-sm">
+                    إغلاق والعودة للعبة
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Effects using Web Audio API (No external sound files required) -->
+    <script>
+        // Web Audio Synthesizer for celebration sounds
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioContext();
+            }
+        }
+
+        function playSuccessSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                
+                // Play a cheerful two-tone chime
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, now); // C5
+                osc1.frequency.exponentialRampToValueAtTime(659.25, now + 0.15); // E5
+                osc1.frequency.exponentialRampToValueAtTime(783.99, now + 0.3); // G5
+                
+                gain1.gain.setValueAtTime(0.3, now);
+                gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+                
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                
+                osc1.start(now);
+                osc1.stop(now + 0.5);
+            } catch(e) { console.log('Audio error:', e); }
+        }
+
+        function playVictoryFanfare() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    gain.gain.setValueAtTime(0.3, now + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.4);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.12);
+                    osc.stop(now + idx * 0.12 + 0.4);
+                });
+            } catch(e) { console.log('Audio error:', e); }
+        }
+    </script>
+
+    <!-- Core JavaScript Logic -->
+    <script>
+        // 10 Geographic Questions Data Structure with Hints and Accepted Formats
+        const questionsData = [
+            {
+                id: 1,
+                title: "السهم رقم (1)",
+                question: "ما اسم الدولة التي يشير إليها السهم (1)؟",
+                acceptedAnswers: ["اسبانيا", "إسبانيا", "مملكة اسبانيا", "مملكة إسبانيا"],
+                hint: "تقع هذه الدولة في جنوب غرب قارة أوروبا شبه الجزيرة الإيبرية، وعاصمتها مدريد، وتشتهر بنادي ريال مدريد وبرشلونة!",
+                answered: false
+            },
+            {
+                id: 2,
+                title: "السهم رقم (2)",
+                question: "ما اسم الدولة التي يشير إليها السهم (2)؟",
+                acceptedAnswers: ["البرتغال", "برتغال", "جمهورية البرتغال"],
+                hint: "دولة أوروبية تقع على المحيط الأطلنطي تجاور إسبانيا من الغرب، وعاصمتها لشبونة وموطن اللاعب كريستيانو رونالدو!",
+                answered: false
+            },
+            {
+                id: 3,
+                title: "السهم رقم (3)",
+                question: "ما اسم القارة التي يشير إليها السهم (3)؟",
+                acceptedAnswers: ["امريكا الشمالية", "أمريكا الشمالية", "قارة امريكا الشمالية", "قارة أمريكا الشمالية", "امريكا الشماليه", "أمريكا الشماليه"],
+                hint: "قارة تقع بأكملها في النصف الشمالي والغربي من الكرة الأرضية وتضم دولاً مثل كندا والولايات المتحدة والمكسيك.",
+                answered: false
+            },
+            {
+                id: 4,
+                title: "السهم رقم (4)",
+                question: "ما اسم القارة التي يشير إليها السهم (4)؟",
+                acceptedAnswers: ["امريكا الجنوبية", "أمريكا الجنوبية", "قارة امريكا الجنوبية", "قارة أمريكا الجنوبية", "امريكا الجنوبيه", "أمريكا الجنوبيه"],
+                hint: "قارة تمتد في النصف الجنوبي للكرة الأرضية، ويجري فيها نهر الأمازون وتتميز بغاباتها الاستوائية الكثيفة.",
+                answered: false
+            },
+            {
+                id: 5,
+                title: "السهم رقم (5)",
+                question: "ما اسم الدولة التي يشير إليها السهم (5)؟",
+                acceptedAnswers: ["البرازيل", "برازيل", "جمهورية البرازيل"],
+                hint: "أكبر دولة في قارة أمريكا الجنوبية مساحة وسكاناً، وتشتهر بلعب كرة القدم ولغتها الرسمية هي البرتغالية!",
+                answered: false
+            },
+            {
+                id: 6,
+                title: "السهم رقم (6)",
+                question: "ما اسم الدولة التي يشير إليها السهم (6)؟",
+                acceptedAnswers: ["الارجنتين", "الأرجنتين", "ارجنتين", "أرجنتين"],
+                hint: "دولة تقع في جنوب قارة أمريكا الجنوبية، عاصمتها بوينس آيرس وموطن أسطورة الكرة ميسي!",
+                answered: false
+            },
+            {
+                id: 7,
+                title: "السهم رقم (7)",
+                question: "ما اسم الدولة التي يشير إليها السهم (7)؟",
+                acceptedAnswers: ["كولومبيا", "كولومبيا ", "جمهورية كولومبيا"],
+                hint: "دولة تقع في أقصى شمال غرب قارة أمريكا الجنوبية، وتطل على المحيط الهادئ والبحر الكاريبي مشهورة بإنتاج القهوة.",
+                answered: false
+            },
+            {
+                id: 8,
+                title: "السهم رقم (8)",
+                question: "ما اسم الدولة التي يشير إليها السهم (8)؟",
+                acceptedAnswers: ["باراجواي", "باراغواي", "باراجواى"],
+                hint: "دولة حبيسة (غير ساحلية) تقع في وسط قارة أمريكا الجنوبية بين البرازيل والأرجنتين والبوليفيا.",
+                answered: false
+            },
+            {
+                id: 9,
+                title: "السهم رقم (9)",
+                question: "ما اسم الدولة التي يشير إليها السهم (9)؟",
+                acceptedAnswers: ["تشيلي", "شيلي", "جمهورية تشيلي"],
+                hint: "دولة تتميز بشريط ساحلي طويل وجبال الأنديز ممتدة على طول الساحل الغربي لأمريكا الجنوبية.",
+                answered: false
+            },
+            {
+                id: 10,
+                title: "السهم رقم (10)",
+                question: "ما اسم الدولة التي يشير إليها السهم (10)؟",
+                acceptedAnswers: ["كندا", "كاندا"],
+                hint: "أكبر دولة مساحة في قارة أمريكا الشمالية وتقع في أقصى شمال القارة، وعاصمتها أتاوا وتشتهر بشجرة القيقب.",
+                answered: false
+            }
+        ];
+
+        // Global State Variables
+        let zoomLevel = 1;
+        let isDragging = false;
+        let startX, startY, translateX = 0, translateY = 0;
+
+        // Initialize Background Stars
+        function createStars() {
+            const container = document.getElementById('starsBg');
+            for (let i = 0; i < 40; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = `${Math.random() * 4 + 2}px`;
+                star.style.height = star.style.width;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.setProperty('--duration', `${Math.random() * 3 + 2}s`);
+                container.appendChild(star);
+            }
+        }
+
+        // Render Questions Cards into DOM
+        function renderQuestions() {
+            const container = document.getElementById('questionsList');
+            container.innerHTML = '';
+
+            questionsData.forEach((q) => {
+                const card = document.createElement('div');
+                card.id = `qCard_${q.id}`;
+                card.className = `p-4 rounded-2xl border-2 transition-all duration-300 shadow-sm ${
+                    q.answered ? 'bg-brandLightGreen border-brandGreen' : 'bg-slate-50 border-slate-200'
+                }`;
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="font-extrabold text-sm ${q.answered ? 'text-brandDarkGreen' : 'text-brandDarkYellow'}">
+                            <i class="fa-solid fa-location-dot ml-1"></i> ${q.title}
+                        </span>
+                        <button onclick="openHintModal(${q.id})" class="text-xs bg-brandLightYellow hover:bg-yellow-200 text-brandDarkYellow px-2.5 py-1 rounded-lg font-bold transition">
+                            💡 تلميح
+                        </button>
+                    </div>
+                    <p class="text-sm font-bold text-slate-700 mb-3">${q.question}</p>
+                    
+                    <div class="space-y-2">
+                        <div class="flex items-center space-x-2 space-x-reverse">
+                            <input type="text" id="input_${q.id}" ${q.answered ? 'disabled value="' + q.acceptedAnswers[0] + '"' : ''}
+                                placeholder="اكتب الإجابة هنا..." 
+                                class="w-full px-3 py-2 text-sm rounded-xl border-2 font-bold focus:outline-none transition ${
+                                    q.answered ? 'border-brandGreen bg-white text-brandDarkGreen' : 'border-slate-300 focus:border-brandGreen'
+                                }"
+                                onkeyup="if(event.key==='Enter') checkAnswer(${q.id})"
+                            />
+                            ${!q.answered ? `
+                                <button onclick="checkAnswer(${q.id})" class="bg-brandGreen hover:bg-brandDarkGreen text-white font-extrabold px-4 py-2 rounded-xl text-sm whitespace-nowrap shadow-md transition active:scale-95">
+                                    إرسال الإجابة
+                                </button>
+                            ` : `
+                                <span class="bg-brandGreen text-white w-9 h-9 rounded-xl flex items-center justify-center text-lg font-bold shadow-sm">
+                                    ✓
+                                </span>
+                            `}
+                        </div>
+                        <div id="feedback_${q.id}" class="text-xs font-bold hidden"></div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Normalize Arabic strings to handle hamzas, spaces, and typos
+        function normalizeArabic(text) {
+            if (!text) return '';
+            return text.trim()
+                .replace(/[\u064B-\u0652]/g, "") // Remove harakat
+                .replace(/[أإآ]/g, "ا") // Standardize Alif
+                .replace(/ى/g, "ي") // Standardize Ya
+                .replace(/ة/g, "ه") // Standardize Ta Marbuta
+                .replace(/\s+/g, " "); // Normalize spaces
+        }
+
+        // Check Answer Logic
+        function checkAnswer(qId) {
+            const question = questionsData.find(q => q.id === qId);
+            if (!question || question.answered) return;
+
+            const inputEl = document.getElementById(`input_${qId}`);
+            const feedbackEl = document.getElementById(`feedback_${qId}`);
+            const userRaw = inputEl.value;
+            const normalizedUser = normalizeArabic(userRaw);
+
+            if (!normalizedUser) {
+                feedbackEl.className = "text-xs font-bold text-amber-600 mt-1 block";
+                feedbackEl.innerText = "⚠️ يرجى كتابة الإجابة أولاً!";
+                return;
+            }
+
+            // Verify if normalized user answer matches any accepted format
+            const isCorrect = question.acceptedAnswers.some(ans => normalizeArabic(ans) === normalizedUser);
+
+            if (isCorrect) {
+                // Correct Answer Handler
+                question.answered = true;
+                playSuccessSound();
+                triggerMiniConfetti();
+
+                feedbackEl.className = "text-xs font-bold text-brandDarkGreen mt-1 block animate-bounce";
+                feedbackEl.innerText = "عاش يا بطل! 🎉 إجابة صحيحة! كمّل التحدي علشان تستحق مكافأتك";
+
+                // Update Progress and Re-render
+                updateProgress();
+                setTimeout(() => renderQuestions(), 600);
+
+            } else {
+                // Wrong Answer Handler
+                feedbackEl.className = "text-xs font-bold text-red-500 mt-1 block";
+                feedbackEl.innerText = "لسه في فرصة يا بطل 💪 فكّر تاني وحاول";
+
+                // Visual shake effect
+                const card = document.getElementById(`qCard_${qId}`);
+                card.classList.add('translate-x-1', 'border-red-400');
+                setTimeout(() => card.classList.remove('translate-x-1', 'border-red-400'), 400);
+            }
+        }
+
+        // Update overall completion progress bar
+        function updateProgress() {
+            const answeredCount = questionsData.filter(q => q.answered).length;
+            const percentage = Math.round((answeredCount / questionsData.length) * 100);
+
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+
+            progressBar.style.width = `${percentage}%`;
+            progressText.innerText = `أكملت ${answeredCount} من 10 أسئلة (${percentage}%)`;
+
+            // Check if 100% completed
+            if (answeredCount === questionsData.length) {
+                setTimeout(() => {
+                    playVictoryFanfare();
+                    triggerBalloonsAndConfetti();
+                    openCertificateModal();
+                }, 800);
+            }
+        }
+
+        // Hint Modal Handlers
+        function openHintModal(qId) {
+            const question = questionsData.find(q => q.id === qId);
+            if (!question) return;
+
+            document.getElementById('hintModalTitle').innerText = `💡 تلميح والمعلومات الخاصة بالسهم (${qId})`;
+            document.getElementById('hintModalText').innerText = question.hint;
+            document.getElementById('hintModal').classList.remove('hidden');
+        }
+
+        function closeHintModal() {
+            document.getElementById('hintModal').classList.add('hidden');
+        }
+
+        // SVG Map Zoom & Pan Logic
+        const svgMap = document.getElementById('worldMapSvg');
+
+        function updateMapTransform() {
+            svgMap.style.transform = `scale(${zoomLevel}) translate(${translateX}px, ${translateY}px)`;
+        }
+
+        document.getElementById('zoomInBtn').onclick = () => {
+            if (zoomLevel < 3) { zoomLevel += 0.3; updateMapTransform(); }
+        };
+        document.getElementById('zoomOutBtn').onclick = () => {
+            if (zoomLevel > 0.8) { zoomLevel -= 0.3; updateMapTransform(); }
+        };
+        document.getElementById('zoomResetBtn').onclick = () => {
+            zoomLevel = 1; translateX = 0; translateY = 0; updateMapTransform();
+        };
+
+        // Celebration Animations (Confetti & Floating Balloons)
+        function triggerMiniConfetti() {
+            confetti({
+                particleCount: 40,
+                spread: 60,
+                origin: { y: 0.7 }
+            });
+        }
+
+        function triggerBalloonsAndConfetti() {
+            // Big Confetti Explosion
+            confetti({
+                particleCount: 150,
+                spread: 100,
+                origin: { y: 0.6 }
+            });
+
+            // Launch Floating Balloons
+            const colors = ['#10B981', '#F59E0B', '#3B82F6', '#EC4899', '#8B5CF6'];
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const balloon = document.createElement('div');
+                    balloon.className = 'balloon text-4xl';
+                    balloon.innerText = '🎈';
+                    balloon.style.left = `${Math.random() * 90 + 5}%`;
+                    balloon.style.animationDuration = `${Math.random() * 2 + 4}s`;
+                    document.body.appendChild(balloon);
+                    setTimeout(() => balloon.remove(), 6000);
+                }, i * 200);
+            }
+        }
+
+        // Certificate Logic
+        function openCertificateModal() {
+            document.getElementById('certificateModal').classList.remove('hidden');
+            document.getElementById('certDate').innerText = new Date().toLocaleDateString('ar-EG');
+        }
+
+        function closeCertModal() {
+            document.getElementById('certificateModal').classList.add('hidden');
+        }
+
+        function previewCertificate() {
+            const name = document.getElementById('studentNameInput').value.trim();
+            const errorEl = document.getElementById('nameError');
+            if (!name) {
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            errorEl.classList.add('hidden');
+
+            document.getElementById('certStudentName').innerText = name;
+            document.getElementById('certificateWrapper').classList.remove('hidden');
+        }
+
+        function downloadPDFCertificate() {
+            const name = document.getElementById('studentNameInput').value.trim();
+            const errorEl = document.getElementById('nameError');
+            if (!name) {
+                errorEl.classList.remove('hidden');
+                return;
+            }
+            errorEl.classList.add('hidden');
+
+            document.getElementById('certStudentName').innerText = name;
+            const element = document.getElementById('certificatePaper');
+            document.getElementById('certificateWrapper').classList.remove('hidden');
+
+            // Generate high quality Arabic PDF using html2pdf
+            const opt = {
+                margin:       [0.2, 0.2, 0.2, 0.2],
+                filename:     `شهادة_تحدي_خريطة_أبطال_الخطة_${name}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // On Page Load Initialization
+        window.onload = function () {
+            createStars();
+            renderQuestions();
+            updateProgress();
+        };
+    </script>
+</body>
+</html>
